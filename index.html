@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FREEBOOK4ALL - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold text-blue-600">📚 FREEBOOK4ALL</h1>
+    <div class="space-x-4">
+      <a href="index.html" class="text-blue-600 hover:underline">Home</a>
+      <a href="upload.html" class="text-blue-600 hover:underline">Upload</a>
+      <a href="admin.html" class="text-blue-600 hover:underline">Admin</a>
+      <a href="suggest-link.html" class="text-blue-600 hover:underline">Suggest Link</a>
+      <a href="vault.html" class="text-purple-600 hover:underline">🔐 Vault</a> <!-- ✅ Vault link -->
+    </div>
+  </nav>
+
+  <!-- Search and Filters -->
+  <div class="p-4">
+    <input type="text" id="searchBar" placeholder="Search PDF or Link..." class="p-2 border w-full rounded mb-4" />
+
+    <div class="grid grid-cols-3 gap-4 mb-4">
+      <select id="filterName" class="p-2 border rounded">
+        <option value="">Filter by Name</option>
+        <option value="az">A-Z</option>
+        <option value="za">Z-A</option>
+      </select>
+
+      <select id="filterSize" class="p-2 border rounded">
+        <option value="">Filter by Size</option>
+        <option value="big">Largest First</option>
+        <option value="small">Smallest First</option>
+      </select>
+
+      <select id="filterDate" class="p-2 border rounded">
+        <option value="">Filter by Date</option>
+        <option value="new">Newest First</option>
+        <option value="old">Oldest First</option>
+      </select>
+    </div>
+
+    <!-- Upload Button -->
+    <div class="mb-4">
+      <a href="upload.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">📤 Create Folder & Upload PDF</a>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" class="bg-white shadow p-4 rounded mb-4">
+      <h2 class="text-lg font-bold mb-2">📊 Site Stats</h2>
+      <p>Total PDFs: <span id="totalPDFs">0</span></p>
+      <p>Total Links: <span id="totalLinks">0</span></p>
+      <p>Total Visitors: <span id="totalVisitors">0</span></p>
+    </div>
+
+    <!-- File List -->
+    <div id="fileList" class="grid gap-4"></div>
+
+    <!-- About Section -->
+    <div class="bg-white shadow p-4 rounded mt-6">
+      <h2 class="text-lg font-bold mb-2">ℹ️ About FREEBOOK4ALL</h2>
+      <p>
+        Welcome to FREEBOOK4ALL – a public library for knowledge lovers. Here, anyone can share useful books or links for others to access. 
+        All content is admin-approved to ensure quality. Feel free to explore, contribute, and learn!
+      </p>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
