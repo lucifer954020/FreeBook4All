@@ -17,7 +17,7 @@
       <a href="upload.html" class="text-blue-600 hover:underline">Upload</a>
       <a href="admin.html" class="text-blue-600 hover:underline">Admin</a>
       <a href="suggest-link.html" class="text-blue-600 hover:underline">Suggest Link</a>
-      <a href="vault.html" class="text-purple-600 hover:underline">🔐 Vault</a> <!-- ✅ Vault link -->
+      <a href="vault.html" class="text-purple-600 hover:underline">🔐 Vault</a>
     </div>
   </nav>
 
@@ -73,5 +73,15 @@
 
   <!-- JavaScript -->
   <script src="script.js"></script>
+
+  <!-- ✅ Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker Registered'))
+        .catch(error => console.error('❌ Service Worker Registration Failed:', error));
+    }
+  </script>
+
 </body>
 </html>
