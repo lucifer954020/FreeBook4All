@@ -1,12 +1,16 @@
 {
   "name": "FreeBook4All",
   "short_name": "FB4All",
+  "id": "/FreeBook4All/",
   "start_url": "/FreeBook4All/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
   "orientation": "portrait",
   "scope": "/FreeBook4All/",
+  "lang": "en",
+  "dir": "ltr",
+  "description": "A free public platform to upload, browse, and download PDF books and educational links. All content is admin approved.",
   "icons": [
     {
       "src": "icon-192.png",
