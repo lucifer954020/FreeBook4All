@@ -19,22 +19,27 @@
     </div>
   </nav>
 
-  <h1 class="text-2xl font-bold mb-4 text-blue-700">📤 Upload PDF or Link</h1>
+  <h1 class="text-2xl font-bold mb-4 text-blue-700">📤 Upload PDF, HTML File or Link</h1>
 
   <form id="uploadForm" class="bg-white p-4 rounded shadow-md max-w-xl mx-auto space-y-4">
     <label class="block">
       <span class="text-gray-700">Sender Name</span>
-      <input type="text" name="senderName" class="mt-1 block w-full border p-2 rounded" />
+      <input type="text" name="senderName" class="mt-1 block w-full border p-2 rounded" required />
     </label>
 
     <label class="block">
       <span class="text-gray-700">Sender Email</span>
-      <input type="email" name="senderEmail" class="mt-1 block w-full border p-2 rounded" />
+      <input type="email" name="senderEmail" class="mt-1 block w-full border p-2 rounded" required />
     </label>
 
     <label class="block">
       <span class="text-gray-700">PDF File (optional)</span>
       <input type="file" name="pdfFile" accept="application/pdf" class="mt-1 block w-full" />
+    </label>
+
+    <label class="block">
+      <span class="text-gray-700">HTML File (optional)</span>
+      <input type="file" name="htmlFile" accept=".html,text/html" class="mt-1 block w-full" />
     </label>
 
     <label class="block">
@@ -61,12 +66,13 @@
       e.preventDefault();
       const formData = new FormData(form);
       const pdfFile = formData.get("pdfFile");
+      const htmlFile = formData.get("htmlFile");
       const link = formData.get("link").trim();
       const name = formData.get("name").trim();
       const senderName = formData.get("senderName").trim();
       const senderEmail = formData.get("senderEmail").trim();
-
       const status = document.getElementById("status");
+
       status.textContent = "⏳ Uploading...";
 
       try {
@@ -74,7 +80,6 @@
           const reader = new FileReader();
           reader.onload = async () => {
             const base64 = reader.result.split(",")[1];
-
             const response = await fetch(API_URL, {
               method: "POST",
               body: new URLSearchParams({
@@ -89,6 +94,24 @@
             status.textContent = text;
           };
           reader.readAsDataURL(pdfFile);
+        } else if (htmlFile && htmlFile.size > 0) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const base64 = reader.result.split(",")[1];
+            const response = await fetch(API_URL, {
+              method: "POST",
+              body: new URLSearchParams({
+                action: "upload_html",
+                filename: htmlFile.name,
+                file: base64,
+                senderName,
+                senderEmail
+              }),
+            });
+            const text = await response.text();
+            status.textContent = text;
+          };
+          reader.readAsDataURL(htmlFile);
         } else if (link !== "") {
           const response = await fetch(API_URL, {
             method: "POST",
@@ -103,7 +126,7 @@
           const text = await response.text();
           status.textContent = text;
         } else {
-          status.textContent = "❌ Please upload a PDF or provide a link.";
+          status.textContent = "❌ Please upload a PDF, HTML file, or provide a link.";
         }
       } catch (err) {
         status.textContent = "❌ Upload failed.";
