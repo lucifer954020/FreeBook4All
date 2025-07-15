@@ -26,8 +26,7 @@ function renderList(files) {
     const [timestamp, type, name, size, link, senderName, senderEmail] = row;
     const card = document.createElement("div");
     card.className = "bg-white shadow p-4 rounded";
-    
-    // Choose icon/text based on file type
+
     let fileActionLabel = "📥 View / Download";
     if (type === "HTML") fileActionLabel = "🌐 View Page";
     if (type === "LINK") fileActionLabel = "🔗 Visit Link";
@@ -40,6 +39,43 @@ function renderList(files) {
       <p>Date: ${new Date(timestamp).toLocaleDateString()}</p>
       <a href="${link}" class="text-blue-600 underline mt-2 inline-block" target="_blank">${fileActionLabel}</a>
     `;
+
+    const template = document.getElementById("rating-template");
+    const ratingBlock = template.content.cloneNode(true);
+    const select = ratingBlock.querySelector(".rating-select");
+    const textarea = ratingBlock.querySelector(".comment-input");
+    const button = ratingBlock.querySelector(".submit-rating");
+    const status = ratingBlock.querySelector(".rating-status");
+
+    button.onclick = async () => {
+      const rating = select.value;
+      const comment = textarea.value.trim();
+      const sender = prompt("Enter your name:");
+      if (!sender) return alert("Name is required.");
+      const body = new URLSearchParams({
+        action: "rate_comment",
+        fileName: name,
+        fileType: type,
+        rating,
+        comment,
+        senderName: sender
+      });
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        });
+        const txt = await res.text();
+        status.textContent = txt;
+        status.className = "text-green-600 mt-1";
+      } catch (err) {
+        status.textContent = "❌ Failed to submit.";
+        status.className = "text-red-600 mt-1";
+      }
+    };
+
+    card.appendChild(ratingBlock);
     list.appendChild(card);
   });
 }
@@ -63,7 +99,6 @@ function updateStats(files) {
   document.getElementById("totalVisitors").textContent = updated;
 }
 
-// Search
 document.getElementById("searchBar").addEventListener("input", (e) => {
   const value = e.target.value.toLowerCase();
   const filtered = allFiles.filter(row =>
@@ -72,7 +107,6 @@ document.getElementById("searchBar").addEventListener("input", (e) => {
   renderList(filtered);
 });
 
-// Filter by Name
 document.getElementById("filterName").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) =>
@@ -81,7 +115,6 @@ document.getElementById("filterName").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
-// Filter by Size
 document.getElementById("filterSize").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -92,7 +125,6 @@ document.getElementById("filterSize").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
-// Filter by Date
 document.getElementById("filterDate").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -103,7 +135,6 @@ document.getElementById("filterDate").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
-// Filter by Type (PDF, LINK, HTML)
 const typeFilter = document.getElementById("filterType");
 if (typeFilter) {
   typeFilter.addEventListener("change", (e) => {
