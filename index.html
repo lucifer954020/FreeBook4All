@@ -45,10 +45,15 @@
       </select>
     </div>
 
-    <!-- Upload Button -->
-    <div class="mb-4">
+    <!-- Upload Buttons -->
+    <div class="mb-4 space-x-2">
       <a href="upload.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">📤 Create Folder & Upload PDF</a>
+      <a href="#" onclick="document.getElementById('folderInput').click()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">📁 Upload Folder</a>
+      <input type="file" id="folderInput" webkitdirectory directory multiple hidden />
     </div>
+
+    <!-- Upload Status -->
+    <div id="status" class="text-center text-sm mt-2 mb-4"></div>
 
     <!-- Stats -->
     <div id="stats" class="bg-white shadow p-4 rounded mb-4">
@@ -74,6 +79,61 @@
   <!-- JavaScript -->
   <script src="script.js"></script>
 
+  <!-- Upload Folder Logic -->
+  <script>
+    document.getElementById('folderInput').addEventListener('change', async function (e) {
+      const files = Array.from(e.target.files).filter(file => file.name.endsWith('.pdf'));
+      const status = document.getElementById('status');
+      if (files.length === 0) {
+        status.textContent = "❌ No PDF files found in the folder.";
+        status.className = "text-red-600";
+        return;
+      }
+
+      const senderName = prompt("Enter your name:");
+      const senderEmail = prompt("Enter your email:");
+      if (!senderName || !senderEmail) {
+        alert("Upload cancelled. Name and email are required.");
+        return;
+      }
+
+      status.textContent = "Uploading folder...";
+      status.className = "text-yellow-600";
+
+      let uploaded = 0;
+      for (const file of files) {
+        const reader = new FileReader();
+        reader.onload = async function () {
+          const base64 = reader.result.split(',')[1];
+          try {
+            const res = await fetch("https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                action: "upload_pdf",
+                file: base64,
+                filename: file.name,
+                senderName,
+                senderEmail
+              })
+            });
+            const result = await res.text();
+            uploaded++;
+            if (uploaded === files.length) {
+              status.textContent = "✅ Folder uploaded successfully!";
+              status.className = "text-green-600";
+            }
+          } catch (err) {
+            console.error(err);
+            status.textContent = "❌ Some uploads failed. Check console.";
+            status.className = "text-red-600";
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+
   <!-- ✅ Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -81,47 +141,6 @@
         .then(() => console.log('✅ Service Worker Registered'))
         .catch(error => console.error('❌ Service Worker Registration Failed:', error));
     }
-  document.getElementById('folderInput').addEventListener('change', async function (e) {
-    const files = Array.from(e.target.files).filter(file => file.name.endsWith('.pdf'));
-    if (files.length === 0) {
-      alert("No PDF files found in the folder.");
-      return;
-    }
-
-    const senderName = prompt("Enter your name:");
-    const senderEmail = prompt("Enter your email:");
-
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.onload = async function () {
-        const base64 = reader.result.split(',')[1];
-
-        try {
-          const res = await fetch("https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-              action: "upload_pdf",
-              file: base64,
-              filename: file.name,
-              senderName,
-              senderEmail
-            })
-          });
-
-          const result = await res.text();
-          console.log(file.name + ": " + result);
-        } catch (err) {
-          console.error(file.name + " upload failed:", err);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    alert("✅ Folder uploaded successfully!");
-  });
   </script>
 
 </body>
