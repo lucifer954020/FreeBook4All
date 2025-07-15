@@ -1,7 +1,9 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec";
 
 let allFiles = [];
+let allComments = [];
 
+// Fetch files
 fetch(API_URL, {
   method: "POST",
   headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -11,12 +13,31 @@ fetch(API_URL, {
   .then((data) => {
     allFiles = data.slice(1).filter(row => row[7] === "Approved");
     updateStats(allFiles);
-    renderList(allFiles);
+    fetchCommentsAndRender();
   })
   .catch((err) => {
     document.getElementById("fileList").innerHTML = `<p class="text-red-600">❌ Failed to load files.</p>`;
     console.error("Fetch error:", err);
   });
+
+// Fetch ratings/comments
+function fetchCommentsAndRender() {
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ action: "get_comments" })
+  })
+    .then((res) => res.json())
+    .then((comments) => {
+      allComments = comments.slice(1); // Skip header
+      renderList(allFiles);
+    })
+    .catch((err) => {
+      console.error("❌ Failed to load comments:", err);
+      allComments = [];
+      renderList(allFiles);
+    });
+}
 
 function renderList(files) {
   const list = document.getElementById("fileList");
@@ -31,6 +52,19 @@ function renderList(files) {
     if (type === "HTML") fileActionLabel = "🌐 View Page";
     if (type === "LINK") fileActionLabel = "🔗 Visit Link";
 
+    // Filter comments for this file
+    const fileComments = allComments.filter(c => c[0] === name && c[1] === type);
+    const avgRating = fileComments.length
+      ? (fileComments.reduce((sum, c) => sum + parseInt(c[2] || 0), 0) / fileComments.length).toFixed(1)
+      : "No rating yet";
+
+    let commentHTML = "";
+    fileComments.forEach(([ , , , comment, commenter, date ]) => {
+      if (comment) {
+        commentHTML += `<p class="text-sm text-gray-700 border-t pt-1 mt-1"><strong>${commenter}</strong>: ${comment} <span class="text-xs text-gray-500">(${date})</span></p>`;
+      }
+    });
+
     card.innerHTML = `
       <h3 class="text-lg font-semibold">${name}</h3>
       <p>Type: ${type}</p>
@@ -38,8 +72,11 @@ function renderList(files) {
       <p>Uploaded by: ${senderName} (${senderEmail})</p>
       <p>Date: ${new Date(timestamp).toLocaleDateString()}</p>
       <a href="${link}" class="text-blue-600 underline mt-2 inline-block" target="_blank">${fileActionLabel}</a>
+      <p class="mt-2 text-yellow-600">⭐ Average Rating: ${avgRating}</p>
+      ${commentHTML}
     `;
 
+    // Rating/Comment input UI
     const template = document.getElementById("rating-template");
     const ratingBlock = template.content.cloneNode(true);
     const select = ratingBlock.querySelector(".rating-select");
@@ -51,7 +88,12 @@ function renderList(files) {
       const rating = select.value;
       const comment = textarea.value.trim();
       const sender = prompt("Enter your name:");
-      if (!sender) return alert("Name is required.");
+      if (!rating || !sender) {
+        status.textContent = "❌ Rating and name required.";
+        status.className = "text-red-600 mt-1";
+        return;
+      }
+
       const body = new URLSearchParams({
         action: "rate_comment",
         fileName: name,
@@ -60,6 +102,7 @@ function renderList(files) {
         comment,
         senderName: sender
       });
+
       try {
         const res = await fetch(API_URL, {
           method: "POST",
@@ -69,9 +112,13 @@ function renderList(files) {
         const txt = await res.text();
         status.textContent = txt;
         status.className = "text-green-600 mt-1";
+        select.value = "";
+        textarea.value = "";
+        fetchCommentsAndRender(); // Refresh after rating
       } catch (err) {
         status.textContent = "❌ Failed to submit.";
         status.className = "text-red-600 mt-1";
+        console.error(err);
       }
     };
 
@@ -99,6 +146,7 @@ function updateStats(files) {
   document.getElementById("totalVisitors").textContent = updated;
 }
 
+// Search
 document.getElementById("searchBar").addEventListener("input", (e) => {
   const value = e.target.value.toLowerCase();
   const filtered = allFiles.filter(row =>
@@ -107,6 +155,7 @@ document.getElementById("searchBar").addEventListener("input", (e) => {
   renderList(filtered);
 });
 
+// Filter by Name
 document.getElementById("filterName").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) =>
@@ -115,6 +164,7 @@ document.getElementById("filterName").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
+// Filter by Size
 document.getElementById("filterSize").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -125,6 +175,7 @@ document.getElementById("filterSize").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
+// Filter by Date
 document.getElementById("filterDate").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -135,6 +186,7 @@ document.getElementById("filterDate").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
+// Filter by Type
 const typeFilter = document.getElementById("filterType");
 if (typeFilter) {
   typeFilter.addEventListener("change", (e) => {
