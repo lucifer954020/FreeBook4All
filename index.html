@@ -1,4 +1,3 @@
-<!-- 🔄 Replaces your original "index.html" -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +44,6 @@
         <option value="old">Oldest First</option>
       </select>
 
-      <!-- ✅ New Filter: File Type -->
       <select id="filterType" class="p-2 border rounded">
         <option value="">All Types</option>
         <option value="PDF">PDF</option>
@@ -69,7 +67,7 @@
       <h2 class="text-lg font-bold mb-2">📊 Site Stats</h2>
       <p>Total PDFs: <span id="totalPDFs">0</span></p>
       <p>Total Links: <span id="totalLinks">0</span></p>
-      <p>Total HTMLs: <span id="totalHTMLs">0</span></p> <!-- ✅ Added HTML counter -->
+      <p>Total HTMLs: <span id="totalHTMLs">0</span></p>
       <p>Total Visitors: <span id="totalVisitors">0</span></p>
     </div>
 
@@ -86,16 +84,19 @@
     </div>
   </div>
 
-  <!-- JavaScript -->
+  <!-- Main JavaScript -->
   <script src="script.js"></script>
 
-  <!-- Upload Folder Logic -->
+  <!-- Upload Folder Logic: Supports PDF + HTML -->
   <script>
     document.getElementById('folderInput').addEventListener('change', async function (e) {
-      const files = Array.from(e.target.files).filter(file => file.name.endsWith('.pdf'));
+      const files = Array.from(e.target.files).filter(file =>
+        file.name.endsWith('.pdf') || file.name.endsWith('.html')
+      );
+
       const status = document.getElementById('status');
       if (files.length === 0) {
-        status.textContent = "❌ No PDF files found in the folder.";
+        status.textContent = "❌ No PDF or HTML files found in the folder.";
         status.className = "text-red-600";
         return;
       }
@@ -107,7 +108,7 @@
         return;
       }
 
-      status.textContent = "Uploading folder...";
+      status.textContent = "📤 Uploading folder...";
       status.className = "text-yellow-600";
 
       let uploaded = 0;
@@ -115,18 +116,21 @@
         const reader = new FileReader();
         reader.onload = async function () {
           const base64 = reader.result.split(',')[1];
+          const action = file.name.endsWith('.pdf') ? 'upload_pdf' : 'upload_html';
+
           try {
             const res = await fetch("https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({
-                action: "upload_pdf",
+                action,
                 file: base64,
                 filename: file.name,
                 senderName,
                 senderEmail
               })
             });
+
             const result = await res.text();
             uploaded++;
             if (uploaded === files.length) {
@@ -144,7 +148,7 @@
     });
   </script>
 
-  <!-- ✅ Service Worker Registration -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
