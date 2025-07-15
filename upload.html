@@ -58,12 +58,14 @@
     <p id="status" class="text-center mt-4"></p>
   </form>
 
+  <!-- ✅ JavaScript for Upload -->
   <script>
     const form = document.getElementById("uploadForm");
     const API_URL = "https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec";
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const formData = new FormData(form);
       const pdfFile = formData.get("pdfFile");
       const htmlFile = formData.get("htmlFile");
@@ -75,45 +77,60 @@
 
       status.textContent = "⏳ Uploading...";
 
+      let uploads = [];
+
       try {
+        // Upload PDF
         if (pdfFile && pdfFile.size > 0) {
           const reader = new FileReader();
-          reader.onload = async () => {
-            const base64 = reader.result.split(",")[1];
-            const response = await fetch(API_URL, {
-              method: "POST",
-              body: new URLSearchParams({
-                action: "upload_pdf",
-                filename: pdfFile.name,
-                file: base64,
-                senderName,
-                senderEmail
-              }),
-            });
-            const text = await response.text();
-            status.textContent = text;
-          };
+          const pdfUpload = new Promise((resolve) => {
+            reader.onload = async () => {
+              const base64 = reader.result.split(",")[1];
+              const res = await fetch(API_URL, {
+                method: "POST",
+                body: new URLSearchParams({
+                  action: "upload_pdf",
+                  filename: pdfFile.name,
+                  file: base64,
+                  senderName,
+                  senderEmail
+                }),
+              });
+              const text = await res.text();
+              resolve("📄 " + text);
+            };
+          });
           reader.readAsDataURL(pdfFile);
-        } else if (htmlFile && htmlFile.size > 0) {
+          uploads.push(pdfUpload);
+        }
+
+        // Upload HTML
+        if (htmlFile && htmlFile.size > 0) {
           const reader = new FileReader();
-          reader.onload = async () => {
-            const base64 = reader.result.split(",")[1];
-            const response = await fetch(API_URL, {
-              method: "POST",
-              body: new URLSearchParams({
-                action: "upload_html",
-                filename: htmlFile.name,
-                file: base64,
-                senderName,
-                senderEmail
-              }),
-            });
-            const text = await response.text();
-            status.textContent = text;
-          };
+          const htmlUpload = new Promise((resolve) => {
+            reader.onload = async () => {
+              const base64 = reader.result.split(",")[1];
+              const res = await fetch(API_URL, {
+                method: "POST",
+                body: new URLSearchParams({
+                  action: "upload_html",
+                  filename: htmlFile.name,
+                  file: base64,
+                  senderName,
+                  senderEmail
+                }),
+              });
+              const text = await res.text();
+              resolve("🌐 " + text);
+            };
+          });
           reader.readAsDataURL(htmlFile);
-        } else if (link !== "") {
-          const response = await fetch(API_URL, {
+          uploads.push(htmlUpload);
+        }
+
+        // Upload Link
+        if (link !== "") {
+          const res = await fetch(API_URL, {
             method: "POST",
             body: new URLSearchParams({
               action: "upload_link",
@@ -123,11 +140,18 @@
               senderEmail
             }),
           });
-          const text = await response.text();
-          status.textContent = text;
-        } else {
-          status.textContent = "❌ Please upload a PDF, HTML file, or provide a link.";
+          const text = await res.text();
+          uploads.push(Promise.resolve("🔗 " + text));
         }
+
+        if (uploads.length === 0) {
+          status.textContent = "❌ Please upload a PDF, HTML file, or provide a link.";
+          return;
+        }
+
+        const results = await Promise.all(uploads);
+        status.innerHTML = results.map(r => `<p>${r}</p>`).join("");
+
       } catch (err) {
         status.textContent = "❌ Upload failed.";
         console.error(err);
