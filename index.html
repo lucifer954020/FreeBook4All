@@ -1,3 +1,4 @@
+<!-- 🔄 Replaces your original "index.html" -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,9 +24,9 @@
 
   <!-- Search and Filters -->
   <div class="p-4">
-    <input type="text" id="searchBar" placeholder="Search PDF or Link..." class="p-2 border w-full rounded mb-4" />
+    <input type="text" id="searchBar" placeholder="Search PDF, Link or HTML..." class="p-2 border w-full rounded mb-4" />
 
-    <div class="grid grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-4 gap-4 mb-4">
       <select id="filterName" class="p-2 border rounded">
         <option value="">Filter by Name</option>
         <option value="az">A-Z</option>
@@ -42,6 +43,14 @@
         <option value="">Filter by Date</option>
         <option value="new">Newest First</option>
         <option value="old">Oldest First</option>
+      </select>
+
+      <!-- ✅ New Filter: File Type -->
+      <select id="filterType" class="p-2 border rounded">
+        <option value="">All Types</option>
+        <option value="PDF">PDF</option>
+        <option value="LINK">Link</option>
+        <option value="HTML">HTML</option>
       </select>
     </div>
 
@@ -60,6 +69,7 @@
       <h2 class="text-lg font-bold mb-2">📊 Site Stats</h2>
       <p>Total PDFs: <span id="totalPDFs">0</span></p>
       <p>Total Links: <span id="totalLinks">0</span></p>
+      <p>Total HTMLs: <span id="totalHTMLs">0</span></p> <!-- ✅ Added HTML counter -->
       <p>Total Visitors: <span id="totalVisitors">0</span></p>
     </div>
 
