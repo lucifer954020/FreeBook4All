@@ -1,3 +1,4 @@
+<!-- 🔄 Replaces your original index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,6 +149,25 @@
     });
   </script>
 
+  <!-- ⭐ Rating + Comment Template (Handled in script.js) -->
+  <template id="rating-template">
+    <div class="mt-2 bg-gray-50 p-3 rounded shadow">
+      <div class="flex items-center gap-2 mb-1">
+        <label class="text-sm font-medium">⭐ Rate this:</label>
+        <select class="rating-select p-1 border rounded">
+          <option value="1">★ 1</option>
+          <option value="2">★ 2</option>
+          <option value="3" selected>★ 3</option>
+          <option value="4">★ 4</option>
+          <option value="5">★ 5</option>
+        </select>
+      </div>
+      <textarea class="comment-input w-full border rounded p-1 text-sm mb-1" placeholder="Write your comment (optional)..."></textarea>
+      <button class="submit-rating bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Submit Feedback</button>
+      <div class="rating-status text-xs mt-1"></div>
+    </div>
+  </template>
+
   <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
@@ -156,6 +176,5 @@
         .catch(error => console.error('❌ Service Worker Registration Failed:', error));
     }
   </script>
-
 </body>
 </html>
