@@ -47,7 +47,7 @@
 
     <!-- Upload Buttons -->
     <div class="mb-4 space-x-2">
-      <a href="upload.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">📤 Create Folder & Upload PDF/HTML</a>
+      <a href="upload.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">📤 Create Folder & Upload PDF</a>
       <a href="#" onclick="document.getElementById('folderInput').click()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">📁 Upload Folder</a>
       <input type="file" id="folderInput" webkitdirectory directory multiple hidden />
     </div>
@@ -82,10 +82,10 @@
   <!-- Upload Folder Logic -->
   <script>
     document.getElementById('folderInput').addEventListener('change', async function (e) {
-      const files = Array.from(e.target.files).filter(file => /\.(pdf|html)$/i.test(file.name));
+      const files = Array.from(e.target.files).filter(file => file.name.endsWith('.pdf'));
       const status = document.getElementById('status');
       if (files.length === 0) {
-        status.textContent = "❌ No PDF or HTML files found in the folder.";
+        status.textContent = "❌ No PDF files found in the folder.";
         status.className = "text-red-600";
         return;
       }
@@ -105,21 +105,19 @@
         const reader = new FileReader();
         reader.onload = async function () {
           const base64 = reader.result.split(',')[1];
-          const actionType = file.name.endsWith(".html") ? "upload_html" : "upload_pdf";
-
           try {
             const res = await fetch("https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({
-                action: actionType,
+                action: "upload_pdf",
                 file: base64,
                 filename: file.name,
                 senderName,
                 senderEmail
               })
             });
-            await res.text();
+            const result = await res.text();
             uploaded++;
             if (uploaded === files.length) {
               status.textContent = "✅ Folder uploaded successfully!";
