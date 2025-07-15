@@ -26,27 +26,36 @@ function renderList(files) {
     const [timestamp, type, name, size, link, senderName, senderEmail] = row;
     const card = document.createElement("div");
     card.className = "bg-white shadow p-4 rounded";
+    
+    // Choose icon/text based on file type
+    let fileActionLabel = "📥 View / Download";
+    if (type === "HTML") fileActionLabel = "🌐 View Page";
+    if (type === "LINK") fileActionLabel = "🔗 Visit Link";
+
     card.innerHTML = `
       <h3 class="text-lg font-semibold">${name}</h3>
       <p>Type: ${type}</p>
       <p>Size: ${size || "N/A"} MB</p>
       <p>Uploaded by: ${senderName} (${senderEmail})</p>
       <p>Date: ${new Date(timestamp).toLocaleDateString()}</p>
-      <a href="${link}" class="text-blue-600 underline mt-2 inline-block" target="_blank">📥 View / Download</a>
+      <a href="${link}" class="text-blue-600 underline mt-2 inline-block" target="_blank">${fileActionLabel}</a>
     `;
     list.appendChild(card);
   });
 }
 
 function updateStats(files) {
-  let pdfCount = 0, linkCount = 0;
+  let pdfCount = 0, linkCount = 0, htmlCount = 0;
   files.forEach(row => {
     if (row[1] === "PDF") pdfCount++;
     if (row[1] === "LINK") linkCount++;
+    if (row[1] === "HTML") htmlCount++;
   });
 
   document.getElementById("totalPDFs").textContent = pdfCount;
   document.getElementById("totalLinks").textContent = linkCount;
+  const htmlElem = document.getElementById("totalHTMLs");
+  if (htmlElem) htmlElem.textContent = htmlCount;
 
   const visits = localStorage.getItem("visits") || 0;
   const updated = parseInt(visits) + 1;
@@ -63,7 +72,7 @@ document.getElementById("searchBar").addEventListener("input", (e) => {
   renderList(filtered);
 });
 
-// Filters
+// Filter by Name
 document.getElementById("filterName").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) =>
@@ -72,6 +81,7 @@ document.getElementById("filterName").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
+// Filter by Size
 document.getElementById("filterSize").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -82,6 +92,7 @@ document.getElementById("filterSize").addEventListener("change", (e) => {
   renderList(value ? sorted : allFiles);
 });
 
+// Filter by Date
 document.getElementById("filterDate").addEventListener("change", (e) => {
   const value = e.target.value;
   const sorted = [...allFiles].sort((a, b) => {
@@ -91,3 +102,13 @@ document.getElementById("filterDate").addEventListener("change", (e) => {
   });
   renderList(value ? sorted : allFiles);
 });
+
+// Filter by Type (PDF, LINK, HTML)
+const typeFilter = document.getElementById("filterType");
+if (typeFilter) {
+  typeFilter.addEventListener("change", (e) => {
+    const value = e.target.value;
+    const filtered = value ? allFiles.filter(row => row[1] === value) : allFiles;
+    renderList(filtered);
+  });
+}
