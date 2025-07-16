@@ -44,7 +44,7 @@
 
     <label class="block">
       <span class="text-gray-700">External Link (optional)</span>
-      <input type="text" name="link" placeholder="https://..." class="mt-1 block w-full border p-2 rounded" />
+      <input type="url" name="link" placeholder="https://..." class="mt-1 block w-full border p-2 rounded" />
     </label>
 
     <label class="block">
@@ -75,7 +75,14 @@
       const senderEmail = formData.get("senderEmail").trim();
       const status = document.getElementById("status");
 
+      if (!senderName || (!senderEmail.includes("@") && senderEmail !== "admin")) {
+        status.textContent = "❌ Please enter a valid email or 'admin' if you're the admin.";
+        status.className = "text-red-600";
+        return;
+      }
+
       status.textContent = "⏳ Uploading...";
+      status.className = "text-yellow-600";
 
       let uploads = [];
 
@@ -146,14 +153,17 @@
 
         if (uploads.length === 0) {
           status.textContent = "❌ Please upload a PDF, HTML file, or provide a link.";
+          status.className = "text-red-600";
           return;
         }
 
         const results = await Promise.all(uploads);
         status.innerHTML = results.map(r => `<p>${r}</p>`).join("");
+        status.className = "text-green-600";
 
       } catch (err) {
         status.textContent = "❌ Upload failed.";
+        status.className = "text-red-600";
         console.error(err);
       }
     });
