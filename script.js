@@ -29,7 +29,7 @@ function fetchCommentsAndRender() {
   })
     .then((res) => res.json())
     .then((comments) => {
-      allComments = comments.slice(1); // Skip header
+      allComments = comments; // Already sliced in Apps Script
       renderList(allFiles);
     })
     .catch((err) => {
@@ -52,7 +52,6 @@ function renderList(files) {
     if (type === "HTML") fileActionLabel = "🌐 View Page";
     if (type === "LINK") fileActionLabel = "🔗 Visit Link";
 
-    // Filter comments for this file
     const fileComments = allComments.filter(c => c[0] === name && c[1] === type);
     const avgRating = fileComments.length
       ? (fileComments.reduce((sum, c) => sum + parseInt(c[2] || 0), 0) / fileComments.length).toFixed(1)
@@ -95,7 +94,7 @@ function renderList(files) {
       }
 
       const body = new URLSearchParams({
-        action: "rate_comment",
+        action: "submit_rating",
         fileName: name,
         fileType: type,
         rating,
@@ -111,10 +110,10 @@ function renderList(files) {
         });
         const txt = await res.text();
         status.textContent = txt;
-        status.className = "text-green-600 mt-1";
+        status.className = txt.includes("✅") ? "text-green-600 mt-1" : "text-red-600 mt-1";
         select.value = "";
         textarea.value = "";
-        fetchCommentsAndRender(); // Refresh after rating
+        fetchCommentsAndRender();
       } catch (err) {
         status.textContent = "❌ Failed to submit.";
         status.className = "text-red-600 mt-1";
@@ -147,44 +146,56 @@ function updateStats(files) {
 }
 
 // Search
-document.getElementById("searchBar").addEventListener("input", (e) => {
-  const value = e.target.value.toLowerCase();
-  const filtered = allFiles.filter(row =>
-    row[2].toLowerCase().includes(value) || row[5].toLowerCase().includes(value)
-  );
-  renderList(filtered);
-});
+const search = document.getElementById("searchBar");
+if (search) {
+  search.addEventListener("input", (e) => {
+    const value = e.target.value.toLowerCase();
+    const filtered = allFiles.filter(row =>
+      row[2].toLowerCase().includes(value) || row[5].toLowerCase().includes(value)
+    );
+    renderList(filtered);
+  });
+}
 
 // Filter by Name
-document.getElementById("filterName").addEventListener("change", (e) => {
-  const value = e.target.value;
-  const sorted = [...allFiles].sort((a, b) =>
-    value === "az" ? a[2].localeCompare(b[2]) : b[2].localeCompare(a[2])
-  );
-  renderList(value ? sorted : allFiles);
-});
+const nameFilter = document.getElementById("filterName");
+if (nameFilter) {
+  nameFilter.addEventListener("change", (e) => {
+    const value = e.target.value;
+    const sorted = [...allFiles].sort((a, b) =>
+      value === "az" ? a[2].localeCompare(b[2]) : b[2].localeCompare(a[2])
+    );
+    renderList(value ? sorted : allFiles);
+  });
+}
 
 // Filter by Size
-document.getElementById("filterSize").addEventListener("change", (e) => {
-  const value = e.target.value;
-  const sorted = [...allFiles].sort((a, b) => {
-    const aSize = parseFloat(a[3] || 0);
-    const bSize = parseFloat(b[3] || 0);
-    return value === "big" ? bSize - aSize : aSize - bSize;
+const sizeFilter = document.getElementById("filterSize");
+if (sizeFilter) {
+  sizeFilter.addEventListener("change", (e) => {
+    const value = e.target.value;
+    const sorted = [...allFiles].sort((a, b) => {
+      const aSize = parseFloat(a[3] || 0);
+      const bSize = parseFloat(b[3] || 0);
+      return value === "big" ? bSize - aSize : aSize - bSize;
+    });
+    renderList(value ? sorted : allFiles);
   });
-  renderList(value ? sorted : allFiles);
-});
+}
 
 // Filter by Date
-document.getElementById("filterDate").addEventListener("change", (e) => {
-  const value = e.target.value;
-  const sorted = [...allFiles].sort((a, b) => {
-    const aDate = new Date(a[0]);
-    const bDate = new Date(b[0]);
-    return value === "new" ? bDate - aDate : aDate - bDate;
+const dateFilter = document.getElementById("filterDate");
+if (dateFilter) {
+  dateFilter.addEventListener("change", (e) => {
+    const value = e.target.value;
+    const sorted = [...allFiles].sort((a, b) => {
+      const aDate = new Date(a[0]);
+      const bDate = new Date(b[0]);
+      return value === "new" ? bDate - aDate : aDate - bDate;
+    });
+    renderList(value ? sorted : allFiles);
   });
-  renderList(value ? sorted : allFiles);
-});
+}
 
 // Filter by Type
 const typeFilter = document.getElementById("filterType");
