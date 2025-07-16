@@ -84,71 +84,7 @@
     </div>
   </div>
 
-  <!-- Main JavaScript -->
-  <script src="script.js"></script>
-
-  <!-- Upload Folder Logic -->
-  <script>
-    document.getElementById('folderInput').addEventListener('change', async function (e) {
-      const files = Array.from(e.target.files).filter(file =>
-        file.name.endsWith('.pdf') || file.name.endsWith('.html')
-      );
-
-      const status = document.getElementById('status');
-      if (files.length === 0) {
-        status.textContent = "❌ No PDF or HTML files found in the folder.";
-        status.className = "text-red-600";
-        return;
-      }
-
-      const senderName = prompt("Enter your name:");
-      const senderEmail = prompt("Enter your email:");
-      if (!senderName || !senderEmail) {
-        alert("Upload cancelled. Name and email are required.");
-        return;
-      }
-
-      status.textContent = "📤 Uploading folder...";
-      status.className = "text-yellow-600";
-
-      let uploaded = 0;
-      for (const file of files) {
-        const reader = new FileReader();
-        reader.onload = async function () {
-          const base64 = reader.result.split(',')[1];
-          const action = file.name.endsWith('.pdf') ? 'upload_pdf' : 'upload_html';
-
-          try {
-            const res = await fetch("https://script.google.com/macros/s/AKfycbzy9qqIXCKYhC3HB5zJQ0SI_vSTyrUyp7oODVLayFRMYoi66dVSNtHZhOEvi6Lss-3Q/exec", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: new URLSearchParams({
-                action,
-                file: base64,
-                filename: file.name,
-                senderName,
-                senderEmail
-              })
-            });
-
-            const result = await res.text();
-            uploaded++;
-            if (uploaded === files.length) {
-              status.textContent = "✅ Folder uploaded successfully!";
-              status.className = "text-green-600";
-            }
-          } catch (err) {
-            console.error(err);
-            status.textContent = "❌ Some uploads failed. Check console.";
-            status.className = "text-red-600";
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  </script>
-
-  <!-- ⭐ Rating + Comment Template -->
+  <!-- Rating + Comment Template -->
   <template id="rating-template">
     <div class="mt-3 border-t pt-2">
       <label class="text-sm font-medium">⭐ Rate this file:</label>
@@ -175,5 +111,7 @@
     }
   </script>
 
+  <!-- Main Logic -->
+  <script src="script.js"></script>
 </body>
 </html>
