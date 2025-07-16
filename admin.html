@@ -30,9 +30,10 @@
       <img id="previewImg" src="" class="w-12 h-12 rounded-full object-cover border" alt="Admin Image" />
     </div>
 
-    <!-- Bulk Approval Button -->
-    <div class="mb-4">
+    <!-- Bulk Action Buttons -->
+    <div class="mb-4 space-x-2">
       <button onclick="bulkApprove()" class="bg-green-600 text-white px-4 py-2 rounded">✅ Approve Selected</button>
+      <button onclick="bulkDelete()" class="bg-red-600 text-white px-4 py-2 rounded">🗑️ Delete Selected</button>
     </div>
 
     <!-- File List -->
@@ -72,8 +73,6 @@
     });
 
     function renderTable(data) {
-      const password = document.getElementById("adminPass").value;
-
       data.slice(1).forEach((row, index) => {
         const [timestamp, type, name, size, link, senderName, senderEmail, status, folderId, visibility] = row;
         if (status !== "Pending" && status !== "Approved") return;
@@ -83,7 +82,7 @@
 
         div.innerHTML = `
           <label class="flex items-start space-x-3">
-            <input type="checkbox" class="approve-checkbox mt-1" data-index="${index}" ${status === 'Approved' ? 'disabled' : ''} />
+            <input type="checkbox" class="file-checkbox mt-1" data-index="${index}" />
             <div>
               <p class="font-semibold">${type} - ${name} (${size || "N/A"} MB)</p>
               <p><a href="${link}" class="text-blue-500 underline" target="_blank">🔗 View</a></p>
@@ -127,8 +126,9 @@
     function bulkApprove() {
       const password = document.getElementById("adminPass").value;
       if (!password) return alert("Enter admin password");
-      const checkboxes = document.querySelectorAll(".approve-checkbox:checked");
-      if (checkboxes.length === 0) return alert("No items selected.");
+
+      const checkboxes = document.querySelectorAll(".file-checkbox:checked");
+      if (checkboxes.length === 0) return alert("No files selected.");
 
       Promise.all(Array.from(checkboxes).map(box => {
         const index = parseInt(box.dataset.index);
@@ -142,7 +142,33 @@
           })
         }).then(res => res.text());
       })).then(results => {
-        alert("✅ Bulk approval complete.\n" + results.join("\n"));
+        alert("✅ Bulk approval complete:\n" + results.join("\n"));
+        location.reload();
+      });
+    }
+
+    function bulkDelete() {
+      const password = document.getElementById("adminPass").value;
+      if (!password) return alert("Enter admin password");
+
+      const checkboxes = document.querySelectorAll(".file-checkbox:checked");
+      if (checkboxes.length === 0) return alert("No files selected.");
+
+      if (!confirm("Are you sure you want to delete selected files?")) return;
+
+      Promise.all(Array.from(checkboxes).map(box => {
+        const index = parseInt(box.dataset.index);
+        return fetch(API_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            action: "delete",
+            password,
+            row: index + 1
+          })
+        }).then(res => res.text());
+      })).then(results => {
+        alert("🗑️ Bulk deletion complete:\n" + results.join("\n"));
         location.reload();
       });
     }
@@ -150,6 +176,7 @@
     function remove(index) {
       const password = document.getElementById("adminPass").value;
       if (!password) return alert("Enter admin password");
+
       fetch(API_BASE, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -169,6 +196,7 @@
     function setVisibility(index, visibility) {
       const password = document.getElementById("adminPass").value;
       if (!password || !visibility) return;
+
       fetch(API_BASE, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -185,47 +213,6 @@
         location.reload();
       });
     }
-    <!-- 🔁 Only the modified and added parts below are shown for clarity -->
-<!-- Replace your existing <div class="mb-4">...</div> with this: -->
-
-<!-- Bulk Action Buttons -->
-<div class="mb-4 space-x-2">
-  <button onclick="bulkApprove()" class="bg-green-600 text-white px-4 py-2 rounded">✅ Approve Selected</button>
-  <button onclick="bulkDelete()" class="bg-red-600 text-white px-4 py-2 rounded">🗑️ Delete Selected</button>
-</div>
-
-<!-- 🔁 Inside renderTable function, update this checkbox: -->
-<input type="checkbox" class="file-checkbox mt-1" data-index="${index}" />
-
-<!-- 🔁 Update class name for checkboxes globally -->
-<!-- Old: approve-checkbox → New: file-checkbox -->
-
-<!-- ✅ Add this new function at the bottom of your script: -->
-<script>
-function bulkDelete() {
-  const password = document.getElementById("adminPass").value;
-  if (!password) return alert("Enter admin password");
-  const checkboxes = document.querySelectorAll(".file-checkbox:checked");
-  if (checkboxes.length === 0) return alert("No items selected.");
-
-  if (!confirm("Are you sure you want to delete selected files? This cannot be undone.")) return;
-
-  Promise.all(Array.from(checkboxes).map(box => {
-    const index = parseInt(box.dataset.index);
-    return fetch(API_BASE, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        action: "delete",
-        password,
-        row: index + 1
-      })
-    }).then(res => res.text());
-  })).then(results => {
-    alert("🗑️ Bulk deletion complete.\n" + results.join("\n"));
-    location.reload();
-  });
-}
-</script>
+  </script>
 </body>
 </html>
